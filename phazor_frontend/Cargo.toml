@@ -1,0 +1,11 @@
+[package]
+name = "phazor_frontend"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+yew = { version = "0.21", features = ["csr"] }
+yew-router = "0.18"

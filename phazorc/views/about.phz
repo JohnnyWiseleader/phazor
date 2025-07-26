@@ -1,0 +1,4 @@
+@route "/about"
+def about():
+    <h1>Hello</h1>
+    <p>Welcome to Phazor</p>

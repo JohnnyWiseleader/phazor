@@ -1,0 +1,15 @@
+[package]
+name = "phazorc"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "phazorc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "phazorc"
+path = "src/bin/main.rs"
+
+[dependencies]
+convert_case = "0.6"

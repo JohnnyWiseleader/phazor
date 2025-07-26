@@ -1,0 +1,4 @@
+@route "/home"
+def home():
+    <h1>Hello from home!</h1>
+    <p>Welcome to Phazor</p>

@@ -13,7 +13,7 @@ pub fn info() -> Html {
         <p>{"Phazor simplifies the impossible, mystifies the mundane, and sometimes compiles on the first try."}</p>
         <p>{"Whether you're chasing white whales or race conditions, Phazor has your back."}</p>
         <p>{"Welcome to the future — it’s strongly typed and macro-powered."}</p>
-        <p>{"As the slogan goes. &quot;I seldom test my code but when I do I do it in production!&quot;"}</p>
+        <p>{"As the slogan goes. \"I seldom test my code but when I do I do it in production!\""}</p>
     </>
     }
 }

@@ -1,4 +1,5 @@
 @route "/about"
 def about():
-    <h1>Hello</h1>
+    <h1>Hello, from about!</h1>
     <p>Welcome to Phazor</p>
+    <p>Please contact 1-800-phazor1</p>

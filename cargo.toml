@@ -1,5 +1,7 @@
 [workspace]
+resolver = "3"
 members = [
     "phazorc",
-    "phazor_frontend"
+    "phazor_frontend",
+    "tree-sitter-phz"
 ]

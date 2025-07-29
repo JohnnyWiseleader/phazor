@@ -14,20 +14,20 @@ use yew::prelude::*;
 #[function_component({struct_name})]
 pub fn {name}() -> Html {{
     html! {{
-        {html}
+    <>
+{html}
+    </>
     }}
 }}
 "#,
         struct_name = struct_name,
         name = view.name,
-        html = format!("{{ r#\"{}\"# }}", view.html.trim())
+        html = format!("{}", to_html_expr_lines(view.html.trim()))
     );
 
     let filename = output_dir.join(format!("{}.rs", view.name));
     fs::write(&filename, component_code).expect("Failed to write component file");
     println!("Generated component: {}", filename.display());
-
-    update_mod_rs(output_dir, &view.name);
 }
 
 pub fn write_router(views: &[View], output_dir: &Path) {
@@ -38,9 +38,10 @@ pub fn write_router(views: &[View], output_dir: &Path) {
         let variant = view.name.to_case(Case::Pascal);
         if view.name.to_lowercase() == "home" {
             // Add alias for root path
-            enum_variants.push(format!("    #[at(\"/\")]"));
+            enum_variants.push(format!("    #[at(\"/\")]\n    Home,"));
+        } else {
+            enum_variants.push(format!("    #[at(\"{}\")]\n    {},", view.route, variant));
         }
-        enum_variants.push(format!("    #[at(\"{}\")]\n    {},", view.route, variant));
 
         match_arms.push(format!(
             "        Route::{} => html! {{ <generated::{}::{} /> }},",
@@ -78,7 +79,7 @@ pub fn switch(route: Route) -> Html {{
     println!("Generated router: {}", filename.display());
 }
 
-fn update_mod_rs(output_dir: &Path, view_name: &str) {
+pub fn update_mod_rs(output_dir: &Path, view_name: &String) {
     let mod_rs_path = output_dir.join("mod.rs");
     let mod_line = format!("pub mod {};", view_name);
 
@@ -92,3 +93,34 @@ fn update_mod_rs(output_dir: &Path, view_name: &str) {
         writeln!(file, "{}", mod_line).expect("Failed to write to mod.rs");
     }
 }
+
+fn to_html_expr_lines(text: &str) -> String {
+    text.lines()
+        .filter_map(|line| {
+            let line = line.trim();
+            if line.is_empty() {
+                return None;
+            }
+
+            // Naive regex-free tag + inner content splitting
+            if let Some(start_tag_end) = line.find('>') {
+                if let Some(end_tag_start) = line.rfind('<') {
+                    let start_tag = &line[..=start_tag_end];
+                    let inner_text = &line[start_tag_end + 1..end_tag_start];
+                    let end_tag = &line[end_tag_start..];
+
+                    Some(format!("        {}{{\"{}\"}}{}", start_tag, inner_text.trim(), end_tag))
+                } else {
+                    Some(line.to_string()) // fallback
+                }
+            } else {
+                Some(line.to_string()) // fallback
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+// fn to_html_expr(text: &str) -> String {
+//     format!(r#"{{"{}"}}"#, text.replace('"', "\\\""))
+// }

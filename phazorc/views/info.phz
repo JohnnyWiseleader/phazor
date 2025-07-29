@@ -1,0 +1,11 @@
+@route "/info"
+def info():
+    <h1>Hello, from info</h1>
+    <p>Phazor is a next-generation Python-inspired web framework for WASM applications.</p>
+    <p>Please contact 1-800-PHAZOR1 for support, encouragement, or random compliments.</p>
+    <p>My name is Ishmael. Some years ago — never mind how long precisely — I thought I would write a front-end in Rust.</p>
+    <p>It is a truth universally acknowledged, that a single developer in possession of a good idea, must be in want of a framework.</p>
+    <p>Phazor simplifies the impossible, mystifies the mundane, and sometimes compiles on the first try.</p>
+    <p>Whether you're chasing white whales or race conditions, Phazor has your back.</p>
+    <p>Welcome to the future — it’s strongly typed and macro-powered.</p>
+    <p>As the slogan goes. &quot;I seldom test my code but when I do I do it in production!&quot;</p>

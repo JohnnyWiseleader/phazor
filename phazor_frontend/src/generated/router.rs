@@ -7,8 +7,9 @@ use crate::generated;
 pub enum Route {
     #[at("/about")]
     About,
+    #[at("/info")]
+    Info,
     #[at("/")]
-    #[at("/home")]
     Home,
     #[not_found]
     #[at("/404")]
@@ -18,6 +19,7 @@ pub enum Route {
 pub fn switch(route: Route) -> Html {
     match route {
         Route::About => html! { <generated::about::About /> },
+        Route::Info => html! { <generated::info::Info /> },
         Route::Home => html! { <generated::home::Home /> },
         Route::NotFound => html! { <h1>{ "404 Not Found" }</h1> },
     }

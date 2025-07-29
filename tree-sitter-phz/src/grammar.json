@@ -20,6 +20,27 @@
           "name": "string"
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "@props"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "prop_list"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "STRING",
           "value": "def"
         },
@@ -45,6 +66,31 @@
         }
       ]
     },
+    "prop_list": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              }
+            ]
+          }
+        }
+      ]
+    },
     "string": {
       "type": "PATTERN",
       "value": "\"[^\"]*\""
@@ -54,51 +100,19 @@
       "value": "[a-zA-Z_]\\w*"
     },
     "html_block": {
-      "type": "REPEAT1",
-      "content": {
-        "type": "SYMBOL",
-        "name": "html_element"
-      }
-    },
-    "html_element": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "open_tag"
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "inner_html"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
-          "type": "SYMBOL",
-          "name": "close_tag"
-        }
-      ]
-    },
-    "open_tag": {
       "type": "PATTERN",
-      "value": "<[a-zA-Z][^>]*>"
+      "value": "(<[^>]+>[^<]*<\\/[^>]+>\\s*)+"
     },
-    "close_tag": {
+    "comment": {
       "type": "PATTERN",
-      "value": "<\\/[a-zA-Z][^>]*>"
-    },
-    "inner_html": {
-      "type": "PATTERN",
-      "value": "[^<]+"
+      "value": "#[^\\n]*"
     }
   },
   "extras": [
+    {
+      "type": "SYMBOL",
+      "name": "comment"
+    },
     {
       "type": "PATTERN",
       "value": "\\s"

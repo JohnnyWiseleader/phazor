@@ -5,6 +5,8 @@ use crate::generated;
 
 #[derive(Routable, Clone, PartialEq, Eq, Debug)]
 pub enum Route {
+    #[at("/hello")]
+    Hello,
     #[at("/about")]
     About,
     #[at("/info")]
@@ -18,6 +20,7 @@ pub enum Route {
 
 pub fn switch(route: Route) -> Html {
     match route {
+        Route::Hello => html! { <generated::hello::Hello /> },
         Route::About => html! { <generated::about::About /> },
         Route::Info => html! { <generated::info::Info /> },
         Route::Home => html! { <generated::home::Home /> },

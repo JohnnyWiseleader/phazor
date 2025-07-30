@@ -30,5 +30,6 @@ package-lock.json
 
 # WASM build artifacts
 *.wasm
-*.js
 *.tsbuildinfo
+*.js
+!tree-sitter-phz/grammar.js

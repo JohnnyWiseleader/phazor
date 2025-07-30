@@ -1,12 +1,17 @@
-
 use yew::prelude::*;
 
+#[derive(Properties, PartialEq)]
+pub struct HelloProps {
+    pub name: String,
+    pub age: String,
+}
+
 #[function_component(Hello)]
-pub fn hello() -> Html {
+pub fn hello(props: &HelloProps) -> Html {
     html! {
     <>
-        <h1>{"Hello, {name}!"}</h1>
-        <p>{"{age} years of wisdom!"}</p>
+        <h1>{ format!("Hello, {}!", props.name) }</h1>
+        <p>{ format!("{} years of wisdom!", props.age) }</p>
     </>
     }
 }

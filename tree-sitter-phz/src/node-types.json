@@ -1,6 +1,6 @@
 [
   {
-    "type": "html_block",
+    "type": "prop_list",
     "named": true,
     "fields": {},
     "children": {
@@ -8,30 +8,7 @@
       "required": true,
       "types": [
         {
-          "type": "html_element",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "html_element",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "close_tag",
-          "named": true
-        },
-        {
-          "type": "inner_html",
-          "named": true
-        },
-        {
-          "type": "open_tag",
+          "type": "identifier",
           "named": true
         }
       ]
@@ -69,6 +46,10 @@
           "named": true
         },
         {
+          "type": "prop_list",
+          "named": true
+        },
+        {
           "type": "string",
           "named": true
         }
@@ -84,7 +65,15 @@
     "named": false
   },
   {
+    "type": ",",
+    "named": false
+  },
+  {
     "type": ":",
+    "named": false
+  },
+  {
+    "type": "@props",
     "named": false
   },
   {
@@ -92,7 +81,7 @@
     "named": false
   },
   {
-    "type": "close_tag",
+    "type": "comment",
     "named": true
   },
   {
@@ -100,15 +89,11 @@
     "named": false
   },
   {
+    "type": "html_block",
+    "named": true
+  },
+  {
     "type": "identifier",
-    "named": true
-  },
-  {
-    "type": "inner_html",
-    "named": true
-  },
-  {
-    "type": "open_tag",
     "named": true
   },
   {

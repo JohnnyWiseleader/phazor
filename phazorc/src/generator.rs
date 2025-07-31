@@ -3,12 +3,17 @@ use convert_case::{Case, Casing};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
+use regex::Regex;
 
 pub fn write_component(view: &View, output_dir: &Path) {
-    let struct_name = view.name.to_case(Case::Pascal);
+    let struct_name = &view.name.to_case(Case::Pascal);
+    let name = &view.name;
+    let html = to_html_expr_lines(view);
 
-    let component_code = format!(
-        r#"
+    // format componenet code for output 
+    let component_code = if view.props.is_empty() {
+        format!(
+            r#"
 use yew::prelude::*;
 
 #[function_component({struct_name})]
@@ -20,10 +25,41 @@ pub fn {name}() -> Html {{
     }}
 }}
 "#,
-        struct_name = struct_name,
-        name = view.name,
-        html = format!("{}", to_html_expr_lines(view.html.trim()))
-    );
+            struct_name = struct_name,
+            name = name,
+            html = html
+        )
+    } else {
+        let props = view
+            .props
+            .iter()
+            .map(|p| format!("    pub {}: String,", p))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        format!(
+            r#"use yew::prelude::*;
+
+#[derive(Properties, PartialEq)]
+pub struct {struct_name}Props {{
+{props}
+}}
+
+#[function_component({struct_name})]
+pub fn {name}(props: &{struct_name}Props) -> Html {{
+    html! {{
+    <>
+{html}
+    </>
+    }}
+}}
+"#,
+            struct_name = struct_name,
+            name = name,
+            html = html,
+            props = props
+        )
+    };
 
     let filename = output_dir.join(format!("{}.rs", view.name));
     fs::write(&filename, component_code).expect("Failed to write component file");
@@ -94,33 +130,65 @@ pub fn update_mod_rs(output_dir: &Path, view_name: &String) {
     }
 }
 
-fn to_html_expr_lines(text: &str) -> String {
-    text.lines()
-        .filter_map(|line| {
-            let line = line.trim();
-            if line.is_empty() {
-                return None;
+// Converts raw HTML with `{prop}` placeholders into Yew-friendly 
+// HTML with prop interpolation.
+fn to_html_expr_lines(view: &View) -> String {
+    let html = view.html.trim();
+    let props = &view.props;
+    let prop_pattern = Regex::new(r"\{(\w+)\}").unwrap();
+    let tag_pattern = Regex::new(r"^(<[^>]+>)(.*)(</[^>]+>)$").unwrap();
+
+    html.lines()
+        .map(|line| {
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                return String::new();
             }
 
-            // Naive regex-free tag + inner content splitting
-            if let Some(start_tag_end) = line.find('>') {
-                if let Some(end_tag_start) = line.rfind('<') {
-                    let start_tag = &line[..=start_tag_end];
-                    let inner_text = &line[start_tag_end + 1..end_tag_start];
-                    let end_tag = &line[end_tag_start..];
+            if let Some(caps) = tag_pattern.captures(trimmed) {
+                let open_tag = &caps[1];
+                let inner = &caps[2];
+                let close_tag = &caps[3];
 
-                    Some(format!("        {}{{\"{}\"}}{}", start_tag, inner_text.trim(), end_tag))
+                // If the inner content includes placeholders, use format!
+                if prop_pattern.is_match(inner) {
+                    let mut format_string = String::new();
+                    let mut format_args = Vec::new();
+                    let mut last_index = 0;
+
+                    for caps in prop_pattern.captures_iter(inner) {
+                        if let Some(m) = caps.get(0) {
+                            let prop_name = &caps[1];
+                            if props.contains(&prop_name.to_string()) {
+                                format_string.push_str(&inner[last_index..m.start()]);
+                                format_string.push_str("{}");
+                                format_args.push(format!("props.{}", prop_name));
+                                last_index = m.end();
+                            }
+                        }
+                    }
+
+                    format_string.push_str(&inner[last_index..]);
+
+                    format!(
+                        "        {}{{ format!(\"{}\"{}) }}{}",
+                        open_tag,
+                        format_string,
+                        format_args
+                            .iter()
+                            .map(|arg| format!(", {}", arg))
+                            .collect::<String>(),
+                        close_tag
+                    )
                 } else {
-                    Some(line.to_string()) // fallback
+                    // Static inner text
+                    format!("        {}{{\"{}\"}}{}", open_tag, inner, close_tag)
                 }
             } else {
-                Some(line.to_string()) // fallback
+                // Line doesn't match expected tag format — fallback
+                format!("        {{\"{}\"}}", trimmed)
             }
         })
         .collect::<Vec<_>>()
         .join("\n")
 }
-
-// fn to_html_expr(text: &str) -> String {
-//     format!(r#"{{"{}"}}"#, text.replace('"', "\\\""))
-// }

@@ -7,6 +7,7 @@ use tree_sitter::Parser;
 fn main() {
     let input_dir = PathBuf::from("views");
     let output_dir = PathBuf::from("../phazor_frontend/src/generated");
+    // let output_dir = PathBuf::from("../phazorc/staging");
     fs::create_dir_all(&output_dir).expect("Failed to create output dir");
 
     if !input_dir.exists() {

@@ -15,6 +15,10 @@ This roadmap outlines the major milestones and architectural goals for the Phazo
 | Phase | Goal | Status |
 |-------|------|--------|
 | 4 | Add `Props` support and basic reactive state via Yew hooks | 🚧 In Progress |
+|   | → [Support route parameters like `/user/:id`](#route-parameter-support) | ✅ Starting |
+|   | → Auto-generate prop structs for views | ✅ Done |
+|   | → Parse and inject dynamic HTML with `props.name`, etc. | ✅ Done |
+|   | → Create test module for Tree-sitter debug output | ✅ Done |
 | 5 | Implement message outbox queue for local-only operation | 🔜 Next |
 | 6 | Detect online/offline status and trigger sync attempts | 🔜 Next |
 
@@ -41,5 +45,21 @@ Phazor is being designed with the following principles:
 - 🌐 WASM-first, Python-compatible in the future
 - 🧠 MVVM-aligned architecture
 
-This document evolves as the project grows. PRs and ideas welcome!
+---
 
+## 🔍 Route Parameter Support
+
+### Goal
+Allow `.phz` files to define routes with dynamic segments like `@route "/user/:id"`, and auto-generate the correct `#[at("/user/:id")]` Yew router entry and component prop.
+
+### Steps
+1. ✅ Update Tree-sitter grammar to allow parsing of `@route "/:param"` format.
+2. ✅ Enhance parser to extract route parameters (e.g., `id`) and inject them into the `View` model.
+3. ✅ Ensure props from the route are included in the Yew component.
+4. ✅ Add logic to `write_component()` to declare props accordingly.
+5. ✅ Test with `.phz` view:
+   ```phz
+   @route "/user/:id"
+   @props id
+   def user():
+       <h1>User ID: {id}</h1>

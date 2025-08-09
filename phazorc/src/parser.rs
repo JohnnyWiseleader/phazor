@@ -52,7 +52,7 @@ pub fn extract_view(source: &str) -> Option<View> {
                     _ => {}
                 }
             }
-
+                
             return Some(View {
                 name,
                 route,

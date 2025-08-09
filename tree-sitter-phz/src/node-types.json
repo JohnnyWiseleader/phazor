@@ -15,6 +15,11 @@
     }
   },
   {
+    "type": "route_string",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "source_file",
     "named": true,
     "fields": {},
@@ -50,7 +55,7 @@
           "named": true
         },
         {
-          "type": "string",
+          "type": "route_string",
           "named": true
         }
       ]
@@ -94,10 +99,6 @@
   },
   {
     "type": "identifier",
-    "named": true
-  },
-  {
-    "type": "string",
     "named": true
   }
 ]

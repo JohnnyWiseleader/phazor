@@ -1,5 +1,6 @@
-# Multiple properties and Python style comments added
-@route "/hello"
+# Multiple properties and Python style comments added 7-28-25
+# Route parameter support added 8-1-25
+@route "/hello/:name/:age"
 @props name, age
 def hello():
     <h1>Hello, {name}!</h1>

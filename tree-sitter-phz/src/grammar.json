@@ -17,7 +17,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "string"
+          "name": "route_string"
         },
         {
           "type": "CHOICE",
@@ -65,6 +65,10 @@
           "name": "html_block"
         }
       ]
+    },
+    "route_string": {
+      "type": "PATTERN",
+      "value": "\"[^\"]*\""
     },
     "prop_list": {
       "type": "SEQ",

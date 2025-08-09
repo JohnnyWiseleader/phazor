@@ -1,16 +1,16 @@
 use crate::ast::View;
 use convert_case::{Case, Casing};
+use regex::Regex;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use regex::Regex;
 
 pub fn write_component(view: &View, output_dir: &Path) {
     let struct_name = &view.name.to_case(Case::Pascal);
     let name = &view.name;
     let html = to_html_expr_lines(view);
 
-    // format componenet code for output 
+    // format componenet code for output
     let component_code = if view.props.is_empty() {
         format!(
             r#"
@@ -72,17 +72,48 @@ pub fn write_router(views: &[View], output_dir: &Path) {
 
     for view in views {
         let variant = view.name.to_case(Case::Pascal);
-        if view.name.to_lowercase() == "home" {
+        let route_name = view.name.to_lowercase();
+        if route_name == "home" {
             // Add alias for root path
             enum_variants.push(format!("    #[at(\"/\")]\n    Home,"));
         } else {
-            enum_variants.push(format!("    #[at(\"{}\")]\n    {},", view.route, variant));
+            let mut props_at = String::from("");
+            let mut vars_names = String::from("");
+            let mut match_pat = String::from("");
+            let mut switch_props = String::from("");
+            for (i, p) in view.props.iter().enumerate() {
+                if i == 0 { // first element in the loop 
+                    vars_names.push_str(" { ");
+                    match_pat.push_str(" { ");
+                }
+                props_at.push('/');
+                props_at.push(':');
+                props_at.push_str(p);
+                vars_names.push_str(p);
+                match_pat.push_str(p);
+                vars_names.push_str(": String, "); // all vars are of type string for now
+                match_pat.push_str(", ");
+                switch_props.push_str(p);
+                switch_props.push_str("={");
+                switch_props.push_str(p);
+                switch_props.push_str("} ");
+                if i == view.props.len() - 1 { // last element in the loop
+                    vars_names.pop(); // remove the last comma and space
+                    vars_names.pop();
+                    vars_names.push_str(" }"); // add closing brace
+                    match_pat.pop(); // remove the last comma and space
+                    match_pat.pop();
+                    match_pat.push_str(" }"); // add closing brace
+                }
+            }
+            enum_variants.push(format!(
+                "    #[at(\"/{route_name}{props_at}\")]\n    {variant}{vars_names},"
+            ));
+            match_arms.push(format!(
+                "        Route::{}{} => html! {{ <generated::{}::{} {}/> }},",
+                variant, match_pat, route_name, variant, switch_props
+            ));
         }
-
-        match_arms.push(format!(
-            "        Route::{} => html! {{ <generated::{}::{} /> }},",
-            variant, view.name, variant
-        ));
     }
 
     let router_code = format!(
@@ -102,6 +133,7 @@ pub enum Route {{
 pub fn switch(route: Route) -> Html {{
     match route {{
 {matches}
+        Route::Home => html! {{ <generated::home::Home /> }},
         Route::NotFound => html! {{ <h1>{{ "404 Not Found" }}</h1> }},
     }}
 }}
@@ -130,7 +162,7 @@ pub fn update_mod_rs(output_dir: &Path, view_name: &String) {
     }
 }
 
-// Converts raw HTML with `{prop}` placeholders into Yew-friendly 
+// Converts raw HTML with `{prop}` placeholders into Yew-friendly
 // HTML with prop interpolation.
 fn to_html_expr_lines(view: &View) -> String {
     let html = view.html.trim();

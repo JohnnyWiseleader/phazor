@@ -1,14 +1,14 @@
 module.exports = grammar({
   name: 'phz',
 
-  extras: $ => [$.comment, /\s/], // ⬅️ Allow whitespace and comments anywhere
+  extras: $ => [$.comment, /\s/],
 
   rules: {
     source_file: $ => repeat($.statement),
 
     statement: $ => seq(
       '@route',
-      $.string,
+      $.route_string,
       optional(seq(
         '@props',
         $.prop_list
@@ -19,6 +19,9 @@ module.exports = grammar({
       ':',
       $.html_block
     ),
+
+    // Allow route string to contain named parameters like ":id"
+    route_string: $ => /"[^"]*"/,
 
     prop_list: $ => sep1($.identifier, ','),
 

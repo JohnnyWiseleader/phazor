@@ -12,11 +12,11 @@ fn main() {
         .compile("tree-sitter-phz");
 
     // Optional: if you have a scanner.c
-    let scanner_path = grammar_dir.join("scanner.c");
-    if scanner_path.exists() {
-        cc::Build::new()
-            .include(&grammar_dir)
-            .file(scanner_path)
-            .compile("tree-sitter-phz-scanner");
-    }
+    // let scanner_path = grammar_dir.join("scanner.c");
+    // if scanner_path.exists() {
+    //     cc::Build::new()
+    //         .include(&grammar_dir)
+    //         .file(scanner_path)
+    //         .compile("tree-sitter-phz-scanner");
+    // }
 }

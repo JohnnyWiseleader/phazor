@@ -1,0 +1,2 @@
+[serve]
+fallback = "index.html"

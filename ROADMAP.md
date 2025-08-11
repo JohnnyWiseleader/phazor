@@ -14,8 +14,8 @@ This roadmap outlines the major milestones and architectural goals for the Phazo
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 4 | Add `Props` support and basic reactive state via Yew hooks | 🚧 In Progress |
-|   | → [Support route parameters like `/user/:id`](#route-parameter-support) | ✅ Starting |
+| 4 | Add `Props` support and basic reactive state via Yew hooks | ✅ Complete |
+|   | → [Support route parameters like `/user/:id`](#route-parameter-support) | ✅ Done |
 |   | → Auto-generate prop structs for views | ✅ Done |
 |   | → Parse and inject dynamic HTML with `props.name`, etc. | ✅ Done |
 |   | → Create test module for Tree-sitter debug output | ✅ Done |

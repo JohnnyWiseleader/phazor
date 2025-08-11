@@ -77,7 +77,7 @@ pub fn write_router(views: &[View], output_dir: &Path) {
             // Add alias for root path
             enum_variants.push(format!("    #[at(\"/\")]\n    Home,"));
         } else {
-            let mut props_at = String::from("");
+            let mut at_props = String::from("");
             let mut vars_names = String::from("");
             let mut match_pat = String::from("");
             let mut switch_props = String::from("");
@@ -86,9 +86,9 @@ pub fn write_router(views: &[View], output_dir: &Path) {
                     vars_names.push_str(" { ");
                     match_pat.push_str(" { ");
                 }
-                props_at.push('/');
-                props_at.push(':');
-                props_at.push_str(p);
+                at_props.push('/');
+                at_props.push(':');
+                at_props.push_str(p);
                 vars_names.push_str(p);
                 match_pat.push_str(p);
                 vars_names.push_str(": String, "); // all vars are of type string for now
@@ -107,7 +107,7 @@ pub fn write_router(views: &[View], output_dir: &Path) {
                 }
             }
             enum_variants.push(format!(
-                "    #[at(\"/{route_name}{props_at}\")]\n    {variant}{vars_names},"
+                "    #[at(\"/{route_name}{at_props}\")]\n    {variant}{vars_names},"
             ));
             match_arms.push(format!(
                 "        Route::{}{} => html! {{ <generated::{}::{} {}/> }},",

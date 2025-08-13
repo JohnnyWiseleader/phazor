@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 
+[features]
+default = []
+fake = []    # expose the fake sink
+# optional alias if anything still asks for "test-support"
+#test-support = ["fake"]
+
 [dependencies]
 anyhow = "1"
 async-trait = "0.1"
@@ -14,4 +20,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", default-features = false, features = ["sync"] }
 
 [dev-dependencies]
-tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", default-features = false, features = [
+    "rt-multi-thread",
+    "macros",
+] }

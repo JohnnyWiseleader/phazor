@@ -1,5 +1,5 @@
-#[cfg(test)]
-pub mod fake; 
+#[cfg(any(test, feature = "fake"))]
+pub mod fake;
 
 use async_trait::async_trait;
 use crate::outbox::types::Message;

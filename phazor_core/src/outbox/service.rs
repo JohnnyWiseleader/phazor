@@ -65,7 +65,7 @@ mod tests {
     use crate::outbox::store::OutboxStore;
     use crate::outbox::types::*;
     use crate::outbox::store_mem::MemStore;
-    use crate::datasink::fake::fake::FailThenOkSink;
+    use crate::datasink::fake::FailThenOkSink;
 
     use std::time::{Duration, SystemTime};
     use uuid::Uuid;

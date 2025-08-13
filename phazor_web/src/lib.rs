@@ -70,7 +70,9 @@ fn app() -> Html {
 pub fn start() {
     // Console logging
     wasm_logger::init(wasm_logger::Config::default());
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    #[cfg(debug_assertions)]
+    console_error_panic_hook::set_once(); // nice errors during dev only
 
     let document = window().unwrap().document().unwrap();
     let root = document.get_element_by_id("root").expect("#root not found");

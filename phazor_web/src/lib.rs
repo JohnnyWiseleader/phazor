@@ -6,8 +6,8 @@ use yew::Renderer;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-mod generated;
-use generated::router::{Route, switch};
+mod components;
+use components::router::{Route, switch};
 
 #[function_component(App)]
 pub fn app() -> Html {

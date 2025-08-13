@@ -24,7 +24,7 @@ fn component_views_match_expected() {
                     write_component(&view, &out_dir);
                     let component_rs =  view.name + ".rs";
 
-                    let actual = fs::read_to_string(out_dir.join(&component_rs)).expect("read generated");
+                    let actual = fs::read_to_string(out_dir.join(&component_rs)).expect("read components");
                     let expected = read_fixture(&("expected/".to_owned() + &component_rs));
 
                     assert_eq!(normalize(&actual), normalize(&expected));

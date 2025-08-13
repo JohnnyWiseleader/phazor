@@ -110,7 +110,7 @@ pub fn write_router(views: &[View], output_dir: &Path) {
                 "    #[at(\"/{route_name}{at_props}\")]\n    {variant}{vars_names},"
             ));
             match_arms.push(format!(
-                "        Route::{}{} => html! {{ <generated::{}::{} {}/> }},",
+                "        Route::{}{} => html! {{ <components::{}::{} {}/> }},",
                 variant, match_pat, route_name, variant, switch_props
             ));
         }
@@ -120,7 +120,7 @@ pub fn write_router(views: &[View], output_dir: &Path) {
         r#"
 use yew::prelude::*;
 use yew_router::prelude::*;
-use crate::generated;
+use crate::components;
 
 #[derive(Routable, Clone, PartialEq, Eq, Debug)]
 pub enum Route {{
@@ -133,7 +133,7 @@ pub enum Route {{
 pub fn switch(route: Route) -> Html {{
     match route {{
 {matches}
-        Route::Home => html! {{ <generated::home::Home /> }},
+        Route::Home => html! {{ <components::home::Home /> }},
         Route::NotFound => html! {{ <h1>{{ "404 Not Found" }}</h1> }},
     }}
 }}

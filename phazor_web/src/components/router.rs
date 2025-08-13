@@ -1,7 +1,7 @@
 
 use yew::prelude::*;
 use yew_router::prelude::*;
-use crate::generated;
+use crate::components;
 
 #[derive(Routable, Clone, PartialEq, Eq, Debug)]
 pub enum Route {
@@ -20,10 +20,10 @@ pub enum Route {
 
 pub fn switch(route: Route) -> Html {
     match route {
-        Route::Hello { name, age } => html! { <generated::hello::Hello name={name} age={age} /> },
-        Route::About => html! { <generated::about::About /> },
-        Route::Info => html! { <generated::info::Info /> },
-        Route::Home => html! { <generated::home::Home /> },
+        Route::Hello { name, age } => html! { <components::hello::Hello name={name} age={age} /> },
+        Route::About => html! { <components::about::About /> },
+        Route::Info => html! { <components::info::Info /> },
+        Route::Home => html! { <components::home::Home /> },
         Route::NotFound => html! { <h1>{ "404 Not Found" }</h1> },
     }
 }

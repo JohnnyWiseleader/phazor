@@ -2,6 +2,6 @@
 resolver = "3"
 members = [
     "phazorc",
-    "phazor_frontend",
+    "phazor_web",
     "tree-sitter-phz"
-]
+, "phazor_core"]

@@ -1,5 +1,5 @@
 [package]
-name = "phazor_frontend"
+name = "phazor_web"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,6 +7,7 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+phazor_core = { path = "../phazor_core", features = ["fake"] } # or ["rest-sink"] to use the rest sink
 yew = { version = "0.21", features = ["csr"] }
 yew-router = "0.18"
 serde = { version = "1.0", features = ["derive"] }
@@ -14,3 +15,8 @@ log = "0.4"
 wasm-logger = "0.2"
 web-sys = "0.3.77"
 wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
+use = "0.0.1-pre.0"
+gloo-events = "0.2.0"
+gloo-timers = "0.3.0"
+console_error_panic_hook = "0.1"

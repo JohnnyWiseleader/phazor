@@ -1,5 +1,5 @@
 //! Exponential backoff with small jitter for retry scheduling.
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, UNIX_EPOCH};
 use crate::util::now::system_time_now;
 
 /// Maximum exponent used for the base 2^exp seconds (caps base at 64s).

@@ -6,8 +6,8 @@
     <base href="/" />
     
 <script type="module">
-import init, * as bindings from '/phazor_web-b2d034048a31b92e.js';
-const wasm = await init({ module_or_path: '/phazor_web-b2d034048a31b92e_bg.wasm' });
+import init, * as bindings from '/phazor_web-c9fc82c8460a4047.js';
+const wasm = await init({ module_or_path: '/phazor_web-c9fc82c8460a4047_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -16,7 +16,7 @@ window.wasmBindings = bindings;
 dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
 </script>
-  <link rel="modulepreload" href="/phazor_web-b2d034048a31b92e.js" crossorigin="anonymous" integrity="sha384-JKAFw1esRZUYy1ntUfHVvYG0Z2a9/r6sgUrq/F1vrFi499UBaP4KWWRY6BjYhHxS"><link rel="preload" href="/phazor_web-b2d034048a31b92e_bg.wasm" crossorigin="anonymous" integrity="sha384-sk8uVqgytO9XpB38tI6dyz5U5NTBa47n/yNQ/MkUXkNxf5AmYpW6lu0mYOgFPjuE" as="fetch" type="application/wasm"></head>
+  <link rel="modulepreload" href="/phazor_web-c9fc82c8460a4047.js" crossorigin="anonymous" integrity="sha384-4ep1JYOqhnnoWQXYRCFDXR7GBLT/XCheXzbo+c2gBEW0IaQwHN7V5uGmEuEMi+rx"><link rel="preload" href="/phazor_web-c9fc82c8460a4047_bg.wasm" crossorigin="anonymous" integrity="sha384-owgg5PJX5F/FBxxk5g5gBVRs+0yGmW1+HB41yrSYHcQJdy4D2n16ie1Z6q7e857N" as="fetch" type="application/wasm"></head>
   <body>
     <div id="root"></div>
   <script>"use strict";

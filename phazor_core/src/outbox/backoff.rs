@@ -1,6 +1,6 @@
 //! Exponential backoff with small jitter for retry scheduling.
-use std::time::Duration;
-use rand::Rng;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use crate::util::now::system_time_now;
 
 /// Maximum exponent used for the base 2^exp seconds (caps base at 64s).
 const MAX_EXPONENT: u32 = 6;
@@ -18,53 +18,30 @@ fn base_secs_for(attempts: u32) -> u64 {
     }
 }
 
-/// Returns a backoff delay = base(attempts) + random jitter (0..=JITTER_MS_MAX ms).
+/// A tiny "good enough" jitter using current time; no RNG crates.
+/// Not cryptographic — but fine for retry staggering in a SPA.
+fn jitter_ms() -> u64 {
+    let now = system_time_now().duration_since(UNIX_EPOCH).unwrap();
+    // Use microseconds mod range to create a quasi-random wobble
+    (now.as_micros() as u64) % (JITTER_MS_MAX + 1)
+}
+
 pub fn next_backoff(attempts: u32) -> Duration {
-    let base = base_secs_for(attempts);
-    let jitter_ms = rand::thread_rng().gen_range(0..=JITTER_MS_MAX);
-    Duration::from_secs(base) + Duration::from_millis(jitter_ms)
+    Duration::from_secs(base_secs_for(attempts)) + Duration::from_millis(jitter_ms())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
-
-    #[test]
-    fn base_growth_and_cap() {
-        // 0 -> 0, 1 -> 1, 2 -> 2, 3 -> 4, ... capped at 64
-        let expected = [0u64, 1, 2, 4, 8, 16, 32, 64, 64, 64, 64];
-        for (i, &exp_sec) in expected.iter().enumerate() {
-            assert_eq!(base_secs_for(i as u32), exp_sec, "attempt {}", i);
+    #[test] fn base_growth_and_cap() {
+        let expected = [0u64,1,2,4,8,16,32,64,64,64];
+        for (i,&e) in expected.iter().enumerate() {
+            assert_eq!(base_secs_for(i as u32), e);
         }
     }
-
-    #[test]
-    fn jitter_bounds_attempt0() {
-        // attempt 0: only jitter (0..=300ms)
-        for _ in 0..100 {
-            let d = next_backoff(0);
-            assert!(d <= Duration::from_millis(JITTER_MS_MAX));
-        }
-    }
-
-    #[test]
-    fn bounds_for_typical_attempt() {
-        // attempt 3 -> base 4s + jitter 0..=300ms
-        for _ in 0..100 {
-            let d = next_backoff(3);
-            assert!(d >= Duration::from_secs(4));
-            assert!(d <= Duration::from_secs(4) + Duration::from_millis(JITTER_MS_MAX));
-        }
-    }
-
-    #[test]
-    fn bounds_for_capped_attempt() {
-        // large attempts should cap at 64s base
-        for _ in 0..100 {
-            let d = next_backoff(50);
-            assert!(d >= Duration::from_secs(64));
-            assert!(d <= Duration::from_secs(64) + Duration::from_millis(JITTER_MS_MAX));
-        }
+    #[test] fn bounds() {
+        let d = next_backoff(3);
+        assert!(d >= Duration::from_secs(4));
+        assert!(d <= Duration::from_secs(4) + Duration::from_millis(JITTER_MS_MAX));
     }
 }

@@ -1,3 +1,4 @@
+use log::{info, trace, warn};
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -5,6 +6,7 @@ use crate::datasink::DataSink;
 use crate::outbox::backoff::next_backoff;
 use crate::outbox::store::OutboxStore;
 use crate::outbox::types::{DeliveryState, Envelope, Message};
+use crate::util::now::system_time_now;
 
 pub struct OutboxService<S: OutboxStore, D: DataSink> {
     store: Arc<S>,
@@ -14,7 +16,11 @@ pub struct OutboxService<S: OutboxStore, D: DataSink> {
 
 impl<S: OutboxStore, D: DataSink> OutboxService<S, D> {
     pub fn new(store: Arc<S>, sink: Arc<D>) -> Self {
-        Self { store, sink, batch_size: 16 }
+        Self {
+            store,
+            sink,
+            batch_size: 16,
+        }
     }
 
     pub fn with_batch_size(mut self, n: usize) -> Self {
@@ -32,25 +38,35 @@ impl<S: OutboxStore, D: DataSink> OutboxService<S, D> {
     /// - Success: mark Succeeded then delete the envelope (keeps store tidy).
     /// - Error: back to Pending, attempts += 1, schedule next_attempt_after with backoff, store last_error.
     pub async fn drain_once(&self) -> anyhow::Result<()> {
+        trace!("drain_once: fetching up to {}", self.batch_size);
         let batch = self.store.due(self.batch_size).await?;
+        trace!("drain_once: due={}", batch.len());
+
         for mut env in batch {
+            trace!(
+                "sending id={} attempts={} state={:?}",
+                env.msg.id, env.attempts, env.state
+            );
+
             // Mark inflight
             env.state = DeliveryState::InFlight;
             self.store.update(env.clone()).await?;
 
             match self.sink.send(&env.msg).await {
                 Ok(()) => {
-                    // Success → mark & delete
+                    // Success - mark & delete
+                    info!("send ok id={}", env.msg.id);
                     env.state = DeliveryState::Succeeded;
                     self.store.update(env.clone()).await?;
                     self.store.delete(env.msg.id).await?;
                 }
                 Err(e) => {
-                    // Failure → schedule retry
+                    // Failure - schedule retry
+                    warn!("send fail id={} err={}", env.msg.id, e);
                     env.state = DeliveryState::Pending;
                     env.attempts += 1;
                     env.last_error = Some(e.to_string());
-                    env.next_attempt_after = SystemTime::now() + next_backoff(env.attempts);
+                    env.next_attempt_after = system_time_now() + next_backoff(env.attempts);
                     self.store.update(env).await?;
                 }
             }
@@ -62,17 +78,19 @@ impl<S: OutboxStore, D: DataSink> OutboxService<S, D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::outbox::store::OutboxStore;
-    use crate::outbox::types::*;
-    use crate::outbox::store_mem::MemStore;
     use crate::datasink::fake::FailThenOkSink;
+    use crate::outbox::store::OutboxStore;
+    use crate::outbox::store_mem::MemStore;
+    use crate::outbox::types::*;
 
     use std::time::{Duration, SystemTime};
     use uuid::Uuid;
 
     fn new_msg() -> Message {
         Message::new(
-            MessageKind::Create { collection: "todos".into() },
+            MessageKind::Create {
+                collection: "todos".into(),
+            },
             serde_json::json!({"title": "Buy hay bales", "done": false}),
         )
     }
@@ -90,10 +108,14 @@ mod tests {
 
         // 1st drain: expect failure → attempts=1, backoff scheduled
         svc.drain_once().await.unwrap();
-        let mut env = store.get(id).await.unwrap().expect("still present after failure");
+        let mut env = store
+            .get(id)
+            .await
+            .unwrap()
+            .expect("still present after failure");
         assert_eq!(env.attempts, 1);
         assert!(matches!(env.state, DeliveryState::Pending));
-        assert!(env.next_attempt_after > SystemTime::now() - Duration::from_secs(1));
+        assert!(env.next_attempt_after > system_time_now() - Duration::from_secs(1));
 
         // Force it due again without waiting
         env.next_attempt_after = SystemTime::UNIX_EPOCH;
@@ -101,7 +123,11 @@ mod tests {
 
         // 2nd drain: expect failure → attempts=2
         svc.drain_once().await.unwrap();
-        env = store.get(id).await.unwrap().expect("present after second failure");
+        env = store
+            .get(id)
+            .await
+            .unwrap()
+            .expect("present after second failure");
         assert_eq!(env.attempts, 2);
         assert!(matches!(env.state, DeliveryState::Pending));
 
@@ -141,7 +167,9 @@ mod tests {
 
         // Enqueue but schedule it in the future
         let msg = Message::new(
-            MessageKind::Custom { topic: "future".into() },
+            MessageKind::Custom {
+                topic: "future".into(),
+            },
             serde_json::json!({}),
         );
         let id = msg.id;
@@ -149,7 +177,7 @@ mod tests {
 
         // Make it "not due yet"
         let mut env = store.get(id).await.unwrap().unwrap();
-        env.next_attempt_after = SystemTime::now() + Duration::from_secs(120);
+        env.next_attempt_after = system_time_now() + Duration::from_secs(120);
         store.update(env).await.unwrap();
 
         // Drain → should leave it untouched

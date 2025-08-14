@@ -1,9 +1,9 @@
-// phazor_core/src/outbox/store_mem.rs
-use super::store::OutboxStore;
-use super::types::{Envelope, DeliveryState};
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::RwLock; 
+use super::store::OutboxStore;
+use super::types::{Envelope, DeliveryState};
+use crate::util::now::system_time_now;
 
 #[derive(Default, Clone)]
 pub struct MemStore(Arc<RwLock<HashMap<uuid::Uuid, Envelope>>>);
@@ -26,7 +26,7 @@ impl OutboxStore for MemStore {
         Ok(())
     }
     async fn due(&self, limit: usize) -> anyhow::Result<Vec<Envelope>> {
-        let now = SystemTime::now();
+        let now = system_time_now();
         let list = self.0.read().await
             .values()
             .filter(|e| matches!(e.state, DeliveryState::Pending | DeliveryState::InFlight)
@@ -123,7 +123,7 @@ mod tests {
         let c = env_with(DeliveryState::InFlight, SystemTime::UNIX_EPOCH);
 
         // Not due yet
-        let future = SystemTime::now() + Duration::from_secs(60);
+        let future = system_time_now() + Duration::from_secs(60);
         let b = env_with(DeliveryState::Pending, future);
         let d = env_with(DeliveryState::InFlight, future);
 

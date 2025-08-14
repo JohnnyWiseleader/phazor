@@ -1,4 +1,5 @@
 // when running wasm call JS Date::now()
+#![allow(unused_imports, dead_code)]   // needed for cfg switch below
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[inline]

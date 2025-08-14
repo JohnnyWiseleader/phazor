@@ -1,5 +1,4 @@
-// phazor_core/src/outbox/store.rs
-use super::types::{Envelope, DeliveryState};
+use super::types:: Envelope;
 use async_trait::async_trait;
 
 #[async_trait]

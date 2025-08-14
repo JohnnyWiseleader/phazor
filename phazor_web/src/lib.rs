@@ -1,20 +1,27 @@
 use std::sync::Arc;
 use wasm_bindgen::prelude::*; // #[wasm_bindgen(start)]
-//use wasm_bindgen_futures::spawn_local;
 use web_sys::window;
 use yew::Renderer;
+use yew::context::ContextProvider;
 use yew::prelude::*;
 use yew_router::prelude::*; // BrowserRouter, Switch, Routable, etc.
-
-//use gloo_events::EventListener;
-//use gloo_timers::future::TimeoutFuture;
-
 use log::info;
 
-use phazor_core::datasink::fake::FailThenOkSink;
+use phazor_core::datasink::fake::FailThenOkSink; // using the fake sink for now
 use phazor_core::outbox::{service::OutboxService, store_mem::MemStore};
 mod components;
 use components::router::{Route, switch};
+
+// context type so pages can access the service 
+#[derive(Clone)]
+pub struct OutboxContext(pub Arc<OutboxService<MemStore, FailThenOkSink>>);
+
+impl PartialEq for OutboxContext {
+    fn eq(&self, other: &Self) -> bool {
+        // true if both Arcs point to the same service instance
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
 
 #[function_component(App)]
 fn app() -> Html {
@@ -58,11 +65,15 @@ fn app() -> Html {
         }
     });
 
+    // Provide the service to pages
+    let ctx = OutboxContext(svc.borrow().clone());
     info!("App rendered!");
     html! {
-        <BrowserRouter>
-            <Switch<Route> render={switch} />
-        </BrowserRouter>
+        <ContextProvider<OutboxContext> context={ctx}>
+            <BrowserRouter>
+                <Switch<Route> render={switch} />
+            </BrowserRouter>
+        </ContextProvider<OutboxContext>>
     }
 }
 

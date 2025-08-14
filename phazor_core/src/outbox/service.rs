@@ -1,6 +1,5 @@
 use log::{info, trace, warn};
 use std::sync::Arc;
-use std::time::SystemTime;
 
 use crate::datasink::DataSink;
 use crate::outbox::backoff::next_backoff;
@@ -84,7 +83,6 @@ mod tests {
     use crate::outbox::types::*;
 
     use std::time::{Duration, SystemTime};
-    use uuid::Uuid;
 
     fn new_msg() -> Message {
         Message::new(

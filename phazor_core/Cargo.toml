@@ -7,17 +7,18 @@ rust-version = "1.85"
 [features]
 default = []
 fake = []    # expose the fake sink
-# optional alias if anything still asks for "test-support"
-#test-support = ["fake"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
 
 [dependencies]
 anyhow = "1"
 async-trait = "0.1"
-rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-uuid = { version = "1", features = ["v4", "serde"] }
+uuid = { version = "1", features = ["v5", "serde"] }
 tokio = { version = "1", default-features = false, features = ["sync"] }
+log = "0.4.27"
 
 [dev-dependencies]
 tokio = { version = "1", default-features = false, features = [

@@ -1,7 +1,25 @@
-// phazor_core/src/outbox/types.rs
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, SystemTime};
 use uuid::Uuid;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
+use crate::util::now::system_time_now;
+
+// simple per-process counter to avoid collisions within the same timestamp
+static COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn make_id_from(kind: &MessageKind, created_at: SystemTime) -> Uuid {
+    let ts = created_at.duration_since(UNIX_EPOCH).unwrap().as_nanos();
+    let c = COUNTER.fetch_add(1, Ordering::Relaxed);
+    // Use the collection/topic to make the name unique and meaningful
+    let name = match kind {
+        MessageKind::Create { collection }
+        | MessageKind::Update { collection }
+        | MessageKind::Delete { collection } => format!("{collection}:{ts}:{c}"),
+        MessageKind::Custom { topic } => format!("{topic}:{ts}:{c}"),
+    };
+    // Deterministic UUIDv5 using the URL namespace (any of DNS/URL/OID/X500 is fine)
+    Uuid::new_v5(&Uuid::NAMESPACE_URL, name.as_bytes())
+}
 
 mod system_time_ms {
     use super::*;
@@ -46,12 +64,9 @@ pub struct Message {
 
 impl Message {
     pub fn new(kind: MessageKind, payload: serde_json::Value) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            kind,
-            payload,
-            created_at: SystemTime::now(),
-        }
+        let created_at = system_time_now();
+        let id = make_id_from(&kind, created_at);
+        Self { id, kind, payload, created_at }
     }
 }
 
@@ -89,6 +104,7 @@ impl Envelope {
 mod tests {
     use super::*;
     use serde_json::{from_str, to_string};
+    use uuid::Uuid;
 
     #[test]
     fn envelope_json_roundtrip() {
@@ -96,7 +112,7 @@ mod tests {
         let fixed_time = SystemTime::UNIX_EPOCH + Duration::from_secs(1_725_000_000);
 
         let msg = Message {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v5(&Uuid::NAMESPACE_URL, b"envelope_json_roundtrip"),
             kind: MessageKind::Create {
                 collection: "todos".into(),
             },

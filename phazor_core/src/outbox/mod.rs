@@ -1,6 +1,8 @@
+pub mod api;
+pub use api::Outbox; // re-export for a clean path: phazor_core::outbox::Outbox
 pub mod backoff;
 pub mod service;
 pub mod store_mem;
 pub mod store;
-pub mod api;
 pub mod types;
+

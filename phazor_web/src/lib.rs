@@ -75,8 +75,9 @@ fn app() -> Html {
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    // Console logging
-    wasm_logger::init(wasm_logger::Config::default());
+    // Show debug logs in Chrome DevTools
+    wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
+
     #[cfg(debug_assertions)]
     console_error_panic_hook::set_once(); // nice errors during dev only
 

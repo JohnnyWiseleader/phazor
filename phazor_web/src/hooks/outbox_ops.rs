@@ -1,21 +1,31 @@
-use yew::prelude::*;
+use log::debug;
+use serde_json::Value;
+use serde_json::to_string_pretty;
 use wasm_bindgen_futures::spawn_local;
-use serde_json::json;
-use crate::OutboxContext; // - this is the type defined in lib.rs from the façade
+use yew::prelude::*;
 
-/// Returns a callback you can stick on a button `onclick` that enqueues a todo
-/// and kicks a one-shot drain.
+use crate::OutboxContext; // this is the type defined in lib.rs from the façade
+
+#[derive(Clone, PartialEq)]
+pub struct EnqueueCreate {
+    pub collection: String,
+    pub payload: Value,
+}
+
+/// Returns a callback you can stick on a button `onclick` that enqueues
+/// a Generic “enqueue” hook (collection + JSON)
 #[hook]
-pub fn use_outbox_ops() -> Callback<()> {
+pub fn use_outbox_enqueue() -> Callback<EnqueueCreate> {
     let ctx = use_context::<OutboxContext>().expect("OutboxContext not provided");
-    let svc = ctx.0.clone(); // Arc<Outbox<...>>
-
-    Callback::from(move |_| {
-        let svc = svc.clone();
+    Callback::from(move |req: EnqueueCreate| {
+        let api = ctx.0.clone();
         spawn_local(async move {
-            // Use the façade’s helpers:
-            let _ = svc.enqueue_create("todos", json!({ "title": "Buy hay bales", "done": false })).await;
-            let _ = svc.drain_once().await; // optional: nudge delivery immediately
+            debug!( // log collection and payload to the browser console 
+                "UI -> enqueue: collection={}, payload=\n{}",
+                req.collection,
+                to_string_pretty(&req.payload).unwrap()
+            );
+            let _ = api.enqueue_create(&req.collection, req.payload).await;
         });
     })
 }

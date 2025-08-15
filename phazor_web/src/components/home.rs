@@ -1,40 +1,37 @@
 use yew::prelude::*;
-use wasm_bindgen_futures::spawn_local;
-
-use phazor_core::outbox::types::{Message, MessageKind};
-use crate::OutboxContext; // import the context type from lib.rs
+use web_sys::HtmlInputElement;
+// use wasm_bindgen::JsCast;
+use serde_json::json;
+use crate::hooks::outbox_ops::{use_outbox_enqueue, EnqueueCreate};
 
 #[function_component(Home)]
 pub fn home() -> Html {
-    let ctx = use_context::<OutboxContext>().expect("OutboxContext not found");
-    let status = use_state(|| String::from("idle"));
+    let title = use_state(|| String::new());
+    let oninput = {
+        let title = title.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            title.set(input.value());
+        })
+    };
 
-    let on_enqueue = {
-        let ctx = ctx.0.clone();
-        let status = status.clone();
+    let enqueue = use_outbox_enqueue();
+    let onclick = {
+        let title = title.clone();
         Callback::from(move |_| {
-            let ctx = ctx.clone();
-            let status = status.clone();
-            spawn_local(async move {
-                let msg = Message::new(
-                    MessageKind::Create { collection: "todos".into() },
-                    serde_json::json!({ "title": "Buy hay bales", "done": false }),
-                );
-                match ctx.enqueue(msg).await {
-                    Ok(_) => status.set("enqueued".into()),
-                    Err(e) => status.set(format!("enqueue error: {e}")),
-                }
+            enqueue.emit(EnqueueCreate {
+                collection: "todos".into(),
+                payload: json!({ "title": (*title).clone(), "done": false }),
             });
         })
     };
 
     html! {
         <>
-            <h1>{ "Hello from home!" }</h1>
-            <p>{ "Welcome to Phazor" }</p>
-
-            <button onclick={on_enqueue}>{ "Add sample todo" }</button>
-            <span style="margin-left:8px">{ (*status).clone() }</span>
+          <h1>{ "Hello from home!" }</h1>
+          <input value={(*title).clone()} {oninput} placeholder="todo title" />
+          <button {onclick}>{ "Add todo" }</button>
         </>
     }
 }
+

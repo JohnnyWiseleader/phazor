@@ -1,7 +1,3 @@
 [workspace]
 resolver = "3"
-members = [
-    "phazorc",
-    "phazor_web",
-    "tree-sitter-phz"
-, "phazor_core"]
+members = ["phazorc", "phazor_web", "tree-sitter-phz", "phazor_core"]

@@ -1,9 +1,9 @@
 #![cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
-use anyhow::Context;
 use async_trait::async_trait;
 use serde::Serialize;
 use crate::outbox::types::Message;
 use crate::datasink::DataSink;
+// use anyhow::anyhow;
 
 #[derive(Clone)]
 pub struct RexieSink {
@@ -21,7 +21,9 @@ impl RexieSink {
     }
 }
 
-#[async_trait]
+// #[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DataSink for RexieSink {
     async fn send(&self, msg: &Message) -> anyhow::Result<()> {
         // Open / upgrade the DB every call (fine for dev; easy to reason about).
@@ -29,12 +31,11 @@ impl DataSink for RexieSink {
             .version(1)
             .add_object_store(
                 rexie::ObjectStore::new(&self.store_name)
-                    .key_path(rexie::KeyPath::new_single("id"))
+                    .key_path("id")
                     .auto_increment(false)
             )
             .build()
-            .await
-            .context("open IndexedDB")?;
+            .await.map_err(|e|  anyhow::anyhow!("open IndexedDB: {:?}", e))?;
 
         // Build a “what we would POST” record
         #[derive(Serialize)]
@@ -54,17 +55,22 @@ impl DataSink for RexieSink {
             attempted_at_ms: js_sys::Date::now() as i64,
         };
 
-        // Convert to JsValue
-        let js = serde_wasm_bindgen::to_value(&record).context("to JsValue")?;
+        // Convert to JsValue or map the error
+        let js = serde_wasm_bindgen::to_value(&record)
+            .map_err(|e|  anyhow::anyhow!("to JsValue: {:?}", e))?;
 
         // Write to the object store (key = message id)
         let tx = db
             .transaction(&[&self.store_name], rexie::TransactionMode::ReadWrite)
-            .context("begin tx")?;
-        let store = tx.store(&self.store_name).context("open store")?;
-        store.put(&js, Some(&wasm_bindgen::JsValue::from_str(&record.id))).await
-            .context("store.put")?;
-        tx.done().await.context("commit tx")?;
+            .map_err(|e|  anyhow::anyhow!("begin tx: {:?}", e))?;
+
+        let store = tx.store(&self.store_name)
+            .map_err(|e|  anyhow::anyhow!("open store: {:?}", e))?;
+
+        store.put(&js, None).await
+            .map_err(|e|  anyhow::anyhow!("put: {e:?}"))?;
+
+        tx.done().await.map_err(|e|  anyhow::anyhow!("commit tx: {:?}", e))?;
 
         // In real sink, Ok means “server accepted it”. For dev, Ok = “logged”.
         Ok(())

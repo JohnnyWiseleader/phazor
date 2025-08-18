@@ -80,6 +80,7 @@ fn app() -> Html {
 pub fn start() {
     // Show debug logs in Chrome DevTools
     wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
+    log::info!("Outbox sink = {}", phazor_core::outbox::Outbox::sink_name());    
 
     #[cfg(debug_assertions)]
     console_error_panic_hook::set_once(); // nice errors during dev only

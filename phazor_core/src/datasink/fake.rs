@@ -20,7 +20,9 @@ impl FailThenOkSink {
     }
 }
 
-#[async_trait]
+// #[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl DataSink for FailThenOkSink {
     async fn send(&self, _msg: &Message) -> anyhow::Result<()> {
         let left = self

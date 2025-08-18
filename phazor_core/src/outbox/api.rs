@@ -70,4 +70,10 @@ impl Outbox {
     pub async fn drain_once(&self) -> anyhow::Result<()> {
         self.svc.drain_once().await
     }
+
+    pub fn sink_name() -> &'static str {
+        #[cfg(feature = "fake")] { "fake" }
+        #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))] { "rexie" }
+        #[cfg(not(any(feature = "fake", all(target_arch="wasm32", feature="rexie-sink"))))] { "unknown" }
+    }
 }

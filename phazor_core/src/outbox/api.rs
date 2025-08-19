@@ -16,6 +16,12 @@ use crate::datasink::fake::FailThenOkSink;
 #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
 use crate::datasink::rest_rexie::RexieSink;
 
+#[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
+use crate::datasink::rest_http::RestHttpSink;
+
+#[cfg(all(not(target_arch = "wasm32"), feature = "rest-http-native"))]
+use crate::datasink::rest_http::RestHttpSink;
+
 // Define a concrete, non-generic Outbox per feature:
 #[cfg(feature = "fake")]
 #[derive(Clone)]
@@ -51,6 +57,26 @@ impl Outbox {
         }
     }
 }
+
+impl Outbox {
+    #[cfg(all(feature = "rest-http-wasm", target_arch = "wasm32"))]
+    pub fn dev_mem_http(base: &str) -> Self {
+        let store = std::sync::Arc::new(super::store_mem::MemStore::default());
+        let sink  = std::sync::Arc::new(RestHttpSink::new(base));
+        Self { svc: std::sync::Arc::new(super::service::OutboxService::new(store, sink)) }
+    }
+
+    #[cfg(all(feature = "rest-http-native", not(target_arch = "wasm32")))]
+    pub fn dev_mem_http(base: &str) -> Self {
+        let store = std::sync::Arc::new(super::store_mem::MemStore::default());
+        let sink  = std::sync::Arc::new(RestHttpSink::new(base));
+        Self { svc: std::sync::Arc::new(super::service::OutboxService::new(store, sink)) }
+    }
+}
+
+
+
+
 
 // Feature-agnostic API that forwards to the inner service:
 impl Outbox {

@@ -35,6 +35,12 @@ pub struct Outbox {
     svc: Arc<OutboxService<MemStore, RexieSink>>,
 }
 
+#[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
+#[derive(Clone)]
+pub struct Outbox {
+    svc: Arc<OutboxService<MemStore, RestHttpSink>>,
+}
+
 // Builders gated by features:
 #[cfg(feature = "fake")]
 impl Outbox {
@@ -59,24 +65,24 @@ impl Outbox {
 }
 
 impl Outbox {
-    #[cfg(all(feature = "rest-http-wasm", target_arch = "wasm32"))]
-    pub fn dev_mem_http(base: &str) -> Self {
-        let store = std::sync::Arc::new(super::store_mem::MemStore::default());
-        let sink  = std::sync::Arc::new(RestHttpSink::new(base));
-        Self { svc: std::sync::Arc::new(super::service::OutboxService::new(store, sink)) }
+    #[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
+    pub fn dev_mem_http(base_url: &str) -> Self {
+        let store = Arc::new(MemStore::default());
+        let sink = Arc::new(RestHttpSink::new(base_url));
+        Self {
+            svc: Arc::new(OutboxService::new(store, sink)),
+        }
     }
 
-    #[cfg(all(feature = "rest-http-native", not(target_arch = "wasm32")))]
+    #[cfg(all(not(target_arch = "wasm32"), feature = "rest-http-native"))]
     pub fn dev_mem_http(base: &str) -> Self {
         let store = std::sync::Arc::new(super::store_mem::MemStore::default());
-        let sink  = std::sync::Arc::new(RestHttpSink::new(base));
-        Self { svc: std::sync::Arc::new(super::service::OutboxService::new(store, sink)) }
+        let sink = std::sync::Arc::new(RestHttpSink::new(base));
+        Self {
+            svc: std::sync::Arc::new(super::service::OutboxService::new(store, sink)),
+        }
     }
 }
-
-
-
-
 
 // Feature-agnostic API that forwards to the inner service:
 impl Outbox {
@@ -87,7 +93,7 @@ impl Outbox {
             },
             payload,
         );
-        
+
         let id = msg.id;
         self.svc.enqueue(msg).await?; // service returns Result<(), _>
         Ok(id) // façade returns the id
@@ -98,8 +104,19 @@ impl Outbox {
     }
 
     pub fn sink_name() -> &'static str {
-        #[cfg(feature = "fake")] { "fake" }
-        #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))] { "rexie" }
-        #[cfg(not(any(feature = "fake", all(target_arch="wasm32", feature="rexie-sink"))))] { "unknown" }
+        if cfg!(feature = "fake") {
+            "fake"
+        } else if cfg!(all(target_arch = "wasm32", feature = "rexie-sink")) {
+            "rexie"
+        } else if cfg!(all(target_arch = "wasm32", feature = "rest-http-wasm")) {
+            "rest http wasm"
+        } else if cfg!(all(
+            not(target_arch = "wasm32"),
+            feature = "rest-http-native"
+        )) {
+            "rest http native"
+        } else {
+            "unknown"
+        }
     }
 }

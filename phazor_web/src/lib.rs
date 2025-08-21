@@ -25,12 +25,16 @@ impl PartialEq for OutboxContext {
 fn app() -> Html {
     let api = use_mut_ref(|| {
         cfg_if! {
-            if #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))] {
+            if #[cfg(all(target_arch="wasm32", feature="rest-http-wasm"))] {
+                Arc::new(Outbox::dev_mem_http("http://localhost:3000"))
+            } else if #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))] {
                 Arc::new(Outbox::dev_mem_rexie("phazor_dev"))
             } else if #[cfg(feature = "fake")] {
                 Arc::new(Outbox::dev_mem_fake(2)) // e.g. fail twice then OK
             } else {
-                compile_error!("Enable either the `fake` or `rexie-sink` feature for phazor_web.");
+                compile_error!(
+                    "Enable either the `fake`, `rexie-sink` or `rest-http-wasm` feature for phazor_web."
+                );
             }
         }
     });

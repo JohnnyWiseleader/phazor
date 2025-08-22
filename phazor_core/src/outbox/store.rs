@@ -1,7 +1,8 @@
 use super::types:: Envelope;
 use async_trait::async_trait;
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait OutboxStore: Send + Sync {
     async fn put(&self, env: Envelope) -> anyhow::Result<()>;
     async fn get(&self, id: uuid::Uuid) -> anyhow::Result<Option<Envelope>>;

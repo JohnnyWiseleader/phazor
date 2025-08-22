@@ -13,6 +13,7 @@ rexie-sink = ["dep:rexie", "dep:serde-wasm-bindgen", "dep:js-sys"]
 # Two rest-http sinks - one for WASM and one for native
 rest-http-wasm = ["dep:gloo-net", "dep:js-sys"]
 rest-http-native = ["dep:reqwest", "dep:tower", "dep:http", "dep:tower-http"]
+idb-store = ["dep:rexie", "dep:serde-wasm-bindgen", "dep:js-sys"]
 
 [dependencies]
 anyhow = "1"
@@ -44,4 +45,3 @@ axum = "0.7"
 tower-http = { version = "0.5", features = ["cors"] }
 serde_json = "1"
 tracing-subscriber = "0.3"
-

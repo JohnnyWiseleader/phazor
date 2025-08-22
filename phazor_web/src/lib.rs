@@ -14,6 +14,9 @@ mod hooks;
 use phazor_core::outbox::Outbox; // Outbox via re-export
 use components::router::{Route, switch};
 
+// top of file (dev-only tuning)
+const DRAIN_EVERY_MS: u32 = 2_000; // set to 2_000 for normal, 60_000 for debug
+
 #[derive(Clone)]
 pub struct OutboxContext(pub std::sync::Arc<Outbox>);
 
@@ -25,15 +28,20 @@ impl PartialEq for OutboxContext {
 fn app() -> Html {
     let api = use_mut_ref(|| {
         cfg_if! {
-            if #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))] {
-                Arc::new(Outbox::dev_mem_rexie("phazor_dev"))
-            } else if #[cfg(feature = "fake")] {
-                Arc::new(Outbox::dev_mem_fake(2)) // e.g. fail twice then OK
+            if #[cfg(all(target_arch="wasm32", feature="idb-store", feature="rest-http-wasm"))] {
+                Arc::new(Outbox::dev_idb_http("http://localhost:3000", "phazor_outbox"))
+            } else if #[cfg(all(target_arch="wasm32", feature="rest-http-wasm"))] {
+                Arc::new(Outbox::dev_mem_http("http://localhost:3000"))
+            } else if #[cfg(all(target_arch="wasm32", feature="fake"))] {
+                Arc::new(Outbox::dev_mem_fake(2))
+            } else if #[cfg(not(target_arch="wasm32"))] {
+                compile_error!("phazor_web must be built for wasm32 (use trunk serve/cargo build --target wasm32-unknown-unknown).");
             } else {
-                compile_error!("Enable either the `fake` or `rexie-sink` feature for phazor_web.");
+                compile_error!("On wasm32, enable one of: idb-store+rest-http-wasm, rest-http-wasm, or fake.");
             }
         }
     });
+
 
     // Background loop (with cleanup)
     use_effect_with((), {
@@ -44,7 +52,9 @@ fn app() -> Html {
             wasm_bindgen_futures::spawn_local(async move {
                 while !stop2.get() {
                     let _ = api.borrow().drain_once().await; // façade forwards to service
-                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                    // This drains the queue every DRAIN_EVERY_MS interval
+                    // After this fires data in the IndexedDB will be empty
+                    gloo_timers::future::TimeoutFuture::new(DRAIN_EVERY_MS).await;
                 }
             });
             move || stop.set(true)

@@ -43,7 +43,7 @@ impl DataSink for RexieSink {
             id: String,
             path: String,                  // pretend endpoint
             method: &'static str,
-            body: &'a Message,             // your full message
+            body: &'a Message,             // full message
             attempted_at_ms: i64,
         }
 

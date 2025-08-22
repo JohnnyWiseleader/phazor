@@ -8,16 +8,24 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 # Pick a sensible default for dev
-default = ["rexie-sink"]
+default = ["idb-store", "rest-http-wasm"]
+# default = ["rexie-sink"]
 # default = ["fake"]
 # Pass-through features that toggle the same thing in phazor_core
 fake = ["phazor_core/fake"]
 rexie-sink = ["phazor_core/rexie-sink"]
+rest-http-wasm = ["phazor_core/rest-http-wasm"]
+rest-http-native = ["phazor_core/rest-http-native"]
+idb-store = ["phazor_core/idb-store"]
 
 [dependencies]
-phazor_core = { path = "../phazor_core", default-features = false, features = ["rexie-sink"] }
+phazor_core = { path = "../phazor_core", default-features = false, features = [
+    "rest-http-wasm",
+    "idb-store",
+] }
+# phazor_core = { path = "../phazor_core", default-features = false, features = ["rest-http-wasm"] }
 # phazor_core = { path = "../phazor_core", default-features = false }
-cfg-if = "1"   # we'll use this to make the cfg selection tidy
+cfg-if = "1"                                       # we'll use this to make the cfg selection tidy
 yew = { version = "0.21", features = ["csr"] }
 yew-router = "0.18"
 serde = { version = "1.0", features = ["derive"] }

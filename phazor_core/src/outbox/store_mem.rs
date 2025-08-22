@@ -8,7 +8,8 @@ use crate::util::now::system_time_now;
 #[derive(Default, Clone)]
 pub struct MemStore(Arc<RwLock<HashMap<uuid::Uuid, Envelope>>>);
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl OutboxStore for MemStore {
     async fn put(&self, env: Envelope) -> anyhow::Result<()> {
         self.0.write().await.insert(env.msg.id, env);

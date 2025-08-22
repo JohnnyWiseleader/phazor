@@ -1,9 +1,14 @@
 #[cfg(any(test, feature = "fake"))]
 pub mod fake;
 
-// only available on wasm targets when feature set
 #[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
 pub mod rest_rexie;
+
+#[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
+pub mod rest_http;
+
+#[cfg(all(not(target_arch = "wasm32"), feature = "rest-http-native"))]
+pub mod rest_http;
 
 use async_trait::async_trait;
 use crate::outbox::types::Message;

@@ -42,7 +42,6 @@ fn app() -> Html {
         }
     });
 
-
     // Background loop (with cleanup)
     use_effect_with((), {
         let api = api.clone();

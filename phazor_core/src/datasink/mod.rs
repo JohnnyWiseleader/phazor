@@ -1,9 +1,6 @@
 #[cfg(any(test, feature = "fake"))]
 pub mod fake;
 
-#[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
-pub mod rest_rexie;
-
 #[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
 pub mod rest_http;
 

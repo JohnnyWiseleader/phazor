@@ -100,7 +100,7 @@ mod native_impl {
     // A cloneable “request” type for the retry policy
     #[derive(Clone)]
     struct Job {
-        method: &'static str,
+        method: String,
         url: String,
         body: Value,
     }
@@ -112,17 +112,19 @@ mod native_impl {
     where
         Req: Clone,
     {
-        type Future = std::future::Ready<Self>;
-        fn retry(&self, _req: &Req, result: Result<&(), &anyhow::Error>) -> Option<Self::Future> {
-            use std::future;
-            // retry on any Err
+        type Future = std::future::Ready<()>;
+        fn retry(&mut self, _req: &mut Req, result: &mut Result<(), anyhow::Error>) -> Option<Self::Future> {
             if result.is_err() && self.max > 0 {
-                Some(future::ready(SimplePolicy { max: self.max - 1 }))
+                self.max -= 1;
+                Some(std::future::ready(()))
             } else {
                 None
             }
         }
-        fn clone_request(&self, req: &Req) -> Option<Req> { Some(req.clone()) }
+
+        fn clone_request(&mut self, req: &Req) -> Option<Req> { 
+            Some(req.clone()) 
+        }
     }
 
     #[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
@@ -137,7 +139,7 @@ mod native_impl {
             let inner = tower::service_fn(move |job: Job| {
                 let client = client.clone();
                 async move {
-                    let builder = match job.method {
+                    let builder = match job.method.as_str() {
                         "POST" => client.post(&job.url),
                         "PUT"  => client.put(&job.url),
                         "DELETE" => client.delete(&job.url),
@@ -160,9 +162,13 @@ mod native_impl {
                 .layer(RetryLayer::new(policy))
                 .service(inner);
 
-            let job = Job { method, url, body };
-            svc.ready().await.context("service not ready")?;
-            svc.call(job).await?;
+            let job = Job { method: method.to_string(), url, body };
+            svc.ready().await
+                .map_err(|e| anyhow::anyhow!("service not ready: {e}"))?;
+
+            svc.call(job).await
+                .map_err(|e| anyhow::anyhow!("service call error: {e}"))?;
+
             Ok(())
         }
     }

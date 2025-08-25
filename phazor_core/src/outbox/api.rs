@@ -1,4 +1,4 @@
-/// Outbox façade (tiny wrapper)
+/// Outbox façade 
 /// Goal: give the app a simple API without touching OutboxService directly
 use serde_json::Value;
 use std::sync::Arc;
@@ -11,9 +11,6 @@ use super::{
 
 #[cfg(feature = "fake")]
 use crate::datasink::fake::FailThenOkSink;
-
-#[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
-use crate::datasink::rest_rexie::RexieSink;
 
 #[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm"))]
 use crate::datasink::rest_http::RestHttpSink;
@@ -32,17 +29,18 @@ pub struct Outbox {
     svc: Arc<OutboxService<super::store_mem::MemStore, FailThenOkSink>>,
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
-#[derive(Clone)]
-pub struct Outbox {
-    svc: Arc<OutboxService<super::store_mem::MemStore, RexieSink>>,
-}
-
 #[cfg(all(target_arch = "wasm32", feature = "rest-http-wasm", not(feature = "idb-store")))]
 #[derive(Clone)]
 pub struct Outbox {
     svc: Arc<OutboxService<super::store_mem::MemStore, RestHttpSink>>,
 }
+
+#[cfg(all(not(target_arch = "wasm32"), feature = "rest-http-native", not(feature = "idb-store")))]
+#[derive(Clone)]
+pub struct Outbox {
+    svc: Arc<OutboxService<super::store_mem::MemStore, RestHttpSink>>,
+}
+
 #[cfg(all(target_arch = "wasm32", feature = "idb-store", feature = "rest-http-wasm"))]
 #[derive(Clone)]
 pub struct Outbox {
@@ -55,17 +53,6 @@ impl Outbox {
     pub fn dev_mem_fake(fails: u32) -> Self {
         let store = Arc::new(super::store_mem::MemStore::default());
         let sink = Arc::new(FailThenOkSink::new(fails));
-        Self {
-            svc: Arc::new(OutboxService::new(store, sink)),
-        }
-    }
-}
-
-#[cfg(all(target_arch = "wasm32", feature = "rexie-sink"))]
-impl Outbox {
-    pub fn dev_mem_rexie(db: &str) -> Self {
-        let store = Arc::new(super::store_mem::MemStore::default());
-        let sink = Arc::new(RexieSink::new(db));
         Self {
             svc: Arc::new(OutboxService::new(store, sink)),
         }

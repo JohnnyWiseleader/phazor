@@ -18,9 +18,15 @@ include = [
 
 [lib]
 path = "bindings/rust/lib.rs"
+required-features = ["native"]
+
+[features]
+native = []
 
 [dependencies]
 tree-sitter = "~0.20.10"
 
 [build-dependencies]
 cc = "1.0"
+
+

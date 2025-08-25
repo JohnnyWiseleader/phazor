@@ -1,0 +1,7 @@
+[target.wasm32-unknown-unknown]
+linker = "rust-lld"
+
+[env]
+CC_wasm32_unknown_unknown = "/usr/local/opt/llvm/bin/clang"
+AR_wasm32_unknown_unknown = "/usr/local/opt/llvm/bin/llvm-ar"
+CFLAGS_wasm32_unknown_unknown = "--target=wasm32-unknown-unknown"

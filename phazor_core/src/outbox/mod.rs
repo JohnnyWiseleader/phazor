@@ -1,6 +1,5 @@
 #[cfg(any(
     feature = "fake",
-    feature = "rexie-sink",
     feature = "rest-http-wasm",
     feature = "rest-http-native",
     all(feature = "idb-store", feature = "rest-http-wasm")
@@ -8,7 +7,6 @@
 pub mod api;
 #[cfg(any(
     feature = "fake",
-    feature = "rexie-sink",
     feature = "rest-http-wasm",
     feature = "rest-http-native",
     all(feature = "idb-store", feature = "rest-http-wasm")
